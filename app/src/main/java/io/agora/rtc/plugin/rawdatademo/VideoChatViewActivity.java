@@ -85,6 +85,8 @@ public class VideoChatViewActivity extends AppCompatActivity implements MediaDat
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_video_chat_view);
 
+        System.out.println("sdk version:" + RtcEngine.getSdkVersion());
+
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO, PERMISSION_REQ_ID_RECORD_AUDIO)
                 && checkSelfPermission(Manifest.permission.CAMERA, PERMISSION_REQ_ID_CAMERA)
                 && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, PERMISSION_REQ_ID_WRITE_EXTERNAL_STORAGE)) {
@@ -221,6 +223,8 @@ public class VideoChatViewActivity extends AppCompatActivity implements MediaDat
 
             throw new RuntimeException("NEED TO check rtc sdk init fatal error\n" + Log.getStackTraceString(e));
         }
+        mRtcEngine.setLogFile("/sdcard/agora-rtc-plugin.log");
+
 
         mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_LIVE_BROADCASTING);
 
@@ -239,7 +243,7 @@ public class VideoChatViewActivity extends AppCompatActivity implements MediaDat
     // Tutorial Step 2
     private void setupVideoProfile() {
         mRtcEngine.enableVideo();
-        mRtcEngine.setVideoProfile(Constants.VIDEO_PROFILE_360P, false);
+        mRtcEngine.setVideoProfile(Constants.VIDEO_PROFILE_240P, false);
     }
 
     // Tutorial Step 3

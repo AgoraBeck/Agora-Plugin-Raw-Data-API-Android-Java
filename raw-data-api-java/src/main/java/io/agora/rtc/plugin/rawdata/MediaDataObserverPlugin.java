@@ -124,16 +124,18 @@ public class MediaDataObserverPlugin implements MediaPreProcessing.ProgressCallb
         for (MediaDataVideoObserver observer : videoObserverList) {
             for (int i = 0; i < decodeBufferList.size(); i++) {
                 if (decodeBufferList.get(i).getUid() == uid) {
+
                     observer.onRenderVideoFrame(uid, decodeBufferList.get(i).getByteBuffer().array(), frameType, width, height, bufferLength, yStride, uStride, vStride, rotation, renderTimeMs);
+
+                    if (beRenderVideoShot) {
+                        if (uid == renderVideoShotUid) {
+                            beRenderVideoShot = false;
+
+                            getVideoShot(width, height, bufferLength, decodeBufferList.get(i).getByteBuffer().array(), renderFilePath);
+                        }
+                    }
                 }
 
-            }
-        }
-
-        if (beRenderVideoShot) {
-            if (uid == renderVideoShotUid) {
-                beRenderVideoShot = false;
-                getVideoShot(width, height, bufferLength, byteBufferRender.array(), renderFilePath);
             }
         }
     }
@@ -177,6 +179,9 @@ public class MediaDataObserverPlugin implements MediaPreProcessing.ProgressCallb
         File fileParent = file.getParentFile();
         if (!fileParent.exists()) {
             fileParent.mkdirs();
+        }
+        if (file.exists()) {
+            file.delete();
         }
 
         try {

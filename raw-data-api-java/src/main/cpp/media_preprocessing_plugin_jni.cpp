@@ -31,15 +31,14 @@ static JavaVM *gJVM = nullptr;
 
 class AgoraVideoFrameObserver : public agora::media::IVideoFrameObserver {
 
-    void *_javaDirectPlayBufferRender = nullptr;
+
 public:
     AgoraVideoFrameObserver() {
-
 
     }
 
     ~AgoraVideoFrameObserver() {
-        _javaDirectPlayBufferRender = nullptr;
+
     }
 
     void
@@ -75,22 +74,18 @@ public:
     }
 
     virtual bool onRenderVideoFrame(unsigned int uid, VideoFrame &videoFrame) override {
-        if (_javaDirectPlayBufferRender == nullptr) {
-            map<int, void *>::iterator it_find;
-            it_find = decodeByfferMap.find(uid);
 
-            if (it_find != decodeByfferMap.end()) {
-                _javaDirectPlayBufferRender = it_find->second;
 
-                __android_log_print(ANDROID_LOG_DEBUG, "plugin",
-                                    "yttest plugin onRenderVideoFrame : %d _javaDirectDecodeBuffer : %p",
-                                    uid, _javaDirectPlayBufferRender);
+        map<int, void *>::iterator it_find;
+        it_find = decodeByfferMap.find(uid);
+
+        if (it_find != decodeByfferMap.end()) {
+            if (it_find->second != nullptr) {
+                getVideoFrame(videoFrame, renderVideoMethodId, it_find->second, uid);
             }
-        }
-        if (_javaDirectPlayBufferRender != nullptr) {
 
-            getVideoFrame(videoFrame, renderVideoMethodId, _javaDirectPlayBufferRender, uid);
         }
+
         return true;
     }
 
@@ -170,22 +165,6 @@ unloadAgoraRtcEnginePlugin(agora::rtc::IRtcEngine *engine) {
     __android_log_print(ANDROID_LOG_DEBUG, "plugin", "plugin unloadAgoraRtcEnginePlugin");
 
     rtcEngine = nullptr;
-
-    gCallBack = nullptr;
-    gCallbackClass = nullptr;
-
-    recordAudioMethodId = nullptr;
-    playbackAudioMethodId = nullptr;
-    playBeforeMixAudioMethodId = nullptr;
-    mixAudioMethodId = nullptr;
-    captureVideoMethodId = nullptr;
-    renderVideoMethodId = nullptr;
-
-    _javaDirectPlayBufferCapture = nullptr;
-    _javaDirectPlayBufferRecordAudio = nullptr;
-    _javaDirectPlayBufferPlayAudio = nullptr;
-    _javaDirectPlayBufferBeforeMixAudio = nullptr;
-    _javaDirectPlayBufferMixAudio = nullptr;
 
 }
 
@@ -276,8 +255,32 @@ JNIEXPORT void JNICALL
 Java_io_agora_rtc_plugin_rawdata_MediaPreProcessing_releasePoint(JNIEnv *env, jobject type) {
 
 
+    agora::util::AutoPtr<agora::media::IMediaEngine> mediaEngine;
+    mediaEngine.queryInterface(rtcEngine, agora::INTERFACE_ID_TYPE::AGORA_IID_MEDIA_ENGINE);
+    if (mediaEngine) {
+
+        mediaEngine->registerVideoFrameObserver(NULL);
+        mediaEngine->registerAudioFrameObserver(NULL);
+
+    }
+
     gCallBack = nullptr;
     gCallbackClass = nullptr;
+    gCallBack = nullptr;
+    gCallbackClass = nullptr;
+
+    recordAudioMethodId = nullptr;
+    playbackAudioMethodId = nullptr;
+    playBeforeMixAudioMethodId = nullptr;
+    mixAudioMethodId = nullptr;
+    captureVideoMethodId = nullptr;
+    renderVideoMethodId = nullptr;
+
+    _javaDirectPlayBufferCapture = nullptr;
+    _javaDirectPlayBufferRecordAudio = nullptr;
+    _javaDirectPlayBufferPlayAudio = nullptr;
+    _javaDirectPlayBufferBeforeMixAudio = nullptr;
+    _javaDirectPlayBufferMixAudio = nullptr;
 
     decodeByfferMap.clear();
 
