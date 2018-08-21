@@ -12,6 +12,11 @@
 
 using namespace std;
 
+#define LOG_TAG "Media_Preprocess"
+#define LOG(...) __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG, __VA_ARGS__)
+
+
+
 jobject gCallBack = nullptr;
 jclass gCallbackClass = nullptr;
 jmethodID recordAudioMethodId = nullptr;
@@ -104,20 +109,31 @@ public:
     }
 
     void getAudioFrame(AudioFrame &audioFrame, _jmethodID *jmethodID, void *_byteBufferObject) {
+//        if(mixAudioMethodId !=  jmethodID)
+//            return;
         if (_byteBufferObject) {
             AttachThreadScoped ats(gJVM);
             JNIEnv *env = ats.env();
             if (env == nullptr) {
                 return;
             }
-            int len = audioFrame.samples * audioFrame.bytesPerSample;
+            int len = audioFrame.samples * audioFrame.bytesPerSample * audioFrame.channels;
+//            LOG("Audio frame len: %d ", len);
+
             memcpy(_byteBufferObject, audioFrame.buffer, len);//* sizeof(int16_t)
+
+//            if (NULL != debugFp) {
+//                fwrite(_byteBufferObject, 1, len , debugFp);
+//            }
+
             env->CallVoidMethod(gCallBack, jmethodID, audioFrame.type, audioFrame.samples,
                                 audioFrame.bytesPerSample,
                                 audioFrame.channels, audioFrame.samplesPerSec,
                                 audioFrame.renderTimeMs, len);
+//            if (NULL != mixFp) {
+//                fwrite(audioFrame.buffer, 1, len , mixFp);
+//            }
         }
-
     }
 
 public:

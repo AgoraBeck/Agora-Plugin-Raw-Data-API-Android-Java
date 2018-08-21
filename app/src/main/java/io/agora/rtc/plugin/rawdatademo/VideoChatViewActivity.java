@@ -78,6 +78,9 @@ public class VideoChatViewActivity extends AppCompatActivity implements MediaDat
             });
         }
 
+        public void onJoinChannelSuccess(String channel, int uid, int elapsed) {
+            mRtcEngine.startAudioMixing("https://mms.msstatic.com/test/musicCjAjfyKt46.mp3",false,false,1);
+        }
     };
 
     @Override

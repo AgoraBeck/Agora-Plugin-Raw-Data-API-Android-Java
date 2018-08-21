@@ -3,6 +3,7 @@ package io.agora.rtc.plugin.rawdata;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,6 +24,7 @@ public class MediaDataObserverPlugin implements MediaPreProcessing.ProgressCallb
     private List<MediaDataAudioObserver> audioObserverList = new ArrayList<>();
     public ByteBuffer byteBufferCapture = ByteBuffer.allocateDirect(1382400);//720P
     public ByteBuffer byteBufferRender = ByteBuffer.allocateDirect(1382400);
+
     public ByteBuffer byteBufferAudioRecord = ByteBuffer.allocateDirect(2048);
     public ByteBuffer byteBufferAudioPlay = ByteBuffer.allocateDirect(2048);
     public ByteBuffer byteBufferBeforeAudioMix = ByteBuffer.allocateDirect(2048);
@@ -35,6 +37,10 @@ public class MediaDataObserverPlugin implements MediaPreProcessing.ProgressCallb
     private String captureFilePath = null;
     private String renderFilePath = null;
     private int renderVideoShotUid;
+
+    private boolean bedumpAudioMixng = false;
+    private String audioMixngFilePath = "/sdcard/audiotest.pcm";
+    private  FileOutputStream fos = null;
 
     public static MediaDataObserverPlugin the() {
         if (myAgent == null) {
@@ -56,10 +62,15 @@ public class MediaDataObserverPlugin implements MediaPreProcessing.ProgressCallb
     }
     public void addAudioObserver(MediaDataAudioObserver observer) {
         audioObserverList.add(observer);
+        if(!bedumpAudioMixng) {
+            bedumpAudioMixng = !bedumpAudioMixng;
+            createAudioDumpFile(audioMixngFilePath);
+        }
     }
 
     public void removeAudioObserver(MediaDataAudioObserver observer) {
         audioObserverList.remove(observer);
+        bedumpAudioMixng = !bedumpAudioMixng;
     }
 
     public void saveCaptureVideoShot(String filePath) {
@@ -115,6 +126,40 @@ public class MediaDataObserverPlugin implements MediaPreProcessing.ProgressCallb
             beCaptureVideoShot = false;
             getVideoShot(width, height, bufferLength, byteBufferCapture.array(), captureFilePath);
 
+        }
+//        Log.e("beck", "byteBufferAudioMix.capacity:"+ byteBufferAudioMix.capacity());
+        getAudioPCM(byteBufferAudioMix.array(), byteBufferAudioMix.arrayOffset(), bufferLength);
+    }
+
+    private void createAudioDumpFile(String filePath){
+
+        File file = new File(filePath);
+
+        File fileParent = file.getParentFile();
+        if (!fileParent.exists()) {
+            fileParent.mkdirs();
+        }
+
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            fos = new FileOutputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private  void getAudioPCM(byte[] buffer, int offset, int bufferLength){
+        if(bedumpAudioMixng) {
+            try {
+                fos.write(buffer, offset, bufferLength);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
