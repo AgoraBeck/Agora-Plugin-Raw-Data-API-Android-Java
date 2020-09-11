@@ -33,9 +33,9 @@ void *_javaDirectPlayBufferMixAudio = nullptr;
 map<int, void *> decodeByfferMap;
 
 static JavaVM *gJVM = nullptr;
+static mutex mtx;
 
 class AgoraVideoFrameObserver : public agora::media::IVideoFrameObserver {
-
 
 public:
     AgoraVideoFrameObserver() {
@@ -109,6 +109,7 @@ public:
     }
 
     void getAudioFrame(AudioFrame &audioFrame, _jmethodID *jmethodID, void *_byteBufferObject) {
+       mtx.lock();
 //        if(mixAudioMethodId !=  jmethodID)
 //            return;
         if (_byteBufferObject) {
@@ -133,6 +134,7 @@ public:
 //            if (NULL != mixFp) {
 //                fwrite(audioFrame.buffer, 1, len , mixFp);
 //            }
+           mtx.unlock();
         }
     }
 
@@ -141,7 +143,7 @@ public:
         getAudioFrame(audioFrame, recordAudioMethodId, _javaDirectPlayBufferRecordAudio);
         return true;
     }
-
+raw-data-api-java/src/main/cpp/media_preprocessing_plugin_jni.cpp 
     virtual bool onPlaybackAudioFrame(AudioFrame &audioFrame) override {
         getAudioFrame(audioFrame, playbackAudioMethodId, _javaDirectPlayBufferPlayAudio);
         return true;
